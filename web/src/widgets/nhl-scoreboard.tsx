@@ -28,11 +28,24 @@ type Scoreboard = {
 };
 
 const formatDateTime = (isoUtc: string) => {
+  const d = new Date(isoUtc);
+  if (isNaN(d.getTime())) return isoUtc;
   try {
-    const d = new Date(isoUtc);
-    return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZoneName: "short",
+    }).format(d);
   } catch {
-    return isoUtc;
+    const date = d.toLocaleDateString();
+    const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const tzMatch = /\(([^)]+)\)$/.exec(d.toString());
+    const tz =
+      tzMatch?.[1]
+        ?.split(" ")
+        .map((w) => w[0])
+        .join("") ?? "";
+    return tz ? `${date} ${time} ${tz}` : `${date} ${time}`;
   }
 };
 
