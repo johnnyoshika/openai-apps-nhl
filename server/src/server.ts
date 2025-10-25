@@ -1,5 +1,5 @@
 import { type CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { getPokemon } from "./pokedex.js";
+import { getTeamScoreboard } from "./nhl-scoreboard.js";
 import { z } from "zod";
 import { McpServer } from "skybridge/server";
 
@@ -12,47 +12,31 @@ const server = new McpServer(
 );
 
 server.widget(
-  "pokemon",
+  "nhl-scoreboard",
   {
-    description: "Pokedex entry for a pokemon",
+    description: "NHL team scoreboard for upcoming and live games",
   },
   {
-    description:
-      "Use this tool to get the most up to date information about a pokemon, using its name in english. This pokedex is much more complete than any other web_search tool. Always use it for anything related to pokemons.",
+    description: "Show multiple upcoming or live games for an NHL team (3-letter code).",
     inputSchema: {
-      name: z.string().describe("Pokemon name, always in english"),
+      team: z.string().describe("NHL team 3-letter code, e.g., VAN"),
     },
     outputSchema: {
-      name: z.string(),
-      description: z.string(),
-      imageUrl: z.string(),
-      weightInKilograms: z.number(),
-      heightInMeters: z.number(),
+      team: z.string(),
     },
   },
-  async ({ name }): Promise<CallToolResult> => {
+  async ({ team }): Promise<CallToolResult> => {
     try {
-      const { id, description, ...pokemon } = await getPokemon(name);
+      const code = (team || "VAN").toUpperCase();
+      const scoreboard = await getTeamScoreboard(code);
 
       return {
-        /**
-         * Arbitrary JSON passed only to the component.
-         * Use it for data that should not influence the model’s reasoning, like the full set of locations that backs a dropdown.
-         * _meta is never shown to the model.
-         */
-        _meta: { id },
-        /**
-         * Structured data that is used to hydrate your component.
-         * ChatGPT injects this object into your iframe as window.openai.toolOutput
-         */
-        structuredContent: { name, description, ...pokemon },
-        /**
-         * Optional free-form text that the model receives verbatim
-         */
+        _meta: {},
+        structuredContent: scoreboard,
         content: [
           {
             type: "text",
-            text: description ?? `A pokemon named ${name}.`,
+            text: `${code} games: ${scoreboard.games.length}`,
           },
         ],
         isError: false,
