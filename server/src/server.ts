@@ -1,6 +1,7 @@
 import { type CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { getTeamScoreboard } from "./nhl-scoreboard.js";
 import { getTeamRoster } from "./nhl-roster.js";
+import { getLeaders } from "./nhl-leaders.js";
 import { z } from "zod";
 import { McpServer } from "skybridge/server";
 
@@ -70,6 +71,43 @@ server.widget(
             text: `${code} games: ${scoreboard.games.length}`,
           },
         ],
+        isError: false,
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${error}` }],
+        isError: true,
+      };
+    }
+  },
+);
+
+server.widget(
+  "nhl-leaders",
+  {
+    description: "NHL skater leaders for points, goals, and assists",
+  },
+  {
+    description: "Show current season leaders. categories defaults to points,goals,assists; limit defaults to 10.",
+    inputSchema: {
+      categories: z.string().describe("Comma-separated categories, e.g., points,goals,assists").optional(),
+      limit: z.number().int().min(1).max(50).describe("How many per category").optional(),
+    },
+    outputSchema: {},
+  },
+  async ({ categories, limit }): Promise<CallToolResult> => {
+    try {
+      const cats = (categories ?? "points,goals,assists")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const lim = limit ?? 10;
+      const leaders = await getLeaders(cats, lim);
+
+      return {
+        _meta: {},
+        structuredContent: leaders,
+        content: [{ type: "text", text: `Leaders loaded: ${cats.join(", ")}` }],
         isError: false,
       };
     } catch (error) {
