@@ -34,16 +34,10 @@ export const getTeamRoster = async (team: string): Promise<NhlRoster> => {
       link: p.id ? `https://www.nhl.com/player/${p.id}` : undefined,
     }));
 
-  const players = [
-    ...collect("forwards"),
-    ...collect("defensemen"),
-    ...collect("goalies"),
-  ].sort((a, b) => {
+  const players = [...collect("forwards"), ...collect("defensemen"), ...collect("goalies")].sort((a, b) => {
     const order = { forwards: 0, defensemen: 1, goalies: 2 } as const;
-    if (order[a.positionGroup] !== order[b.positionGroup])
-      return order[a.positionGroup] - order[b.positionGroup];
-    if ((a.number ?? 0) !== (b.number ?? 0))
-      return (a.number ?? 999) - (b.number ?? 999);
+    if (order[a.positionGroup] !== order[b.positionGroup]) return order[a.positionGroup] - order[b.positionGroup];
+    if ((a.number ?? 0) !== (b.number ?? 0)) return (a.number ?? 999) - (b.number ?? 999);
     return a.lastName.localeCompare(b.lastName);
   });
 

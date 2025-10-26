@@ -30,9 +30,7 @@ server.widget(
       return {
         _meta: {},
         structuredContent: roster,
-        content: [
-          { type: "text", text: `${code} roster: ${roster.players.length} players` },
-        ],
+        content: [{ type: "text", text: `${code} roster: ${roster.players.length} players` }],
         isError: false,
       };
     } catch (error) {
@@ -129,6 +127,54 @@ server.tool(
 
       return {
         content: [{ type: "text", text }],
+        isError: false,
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${error}` }],
+        isError: true,
+      };
+    }
+  },
+);
+
+server.tool(
+  "nhl-player-landing",
+  "Get current season skater stats for an NHL player",
+  { id: z.number().int().describe("NHL player ID") },
+  async ({ id }): Promise<CallToolResult> => {
+    try {
+      const resp = await fetch(`https://api-web.nhle.com/v1/player/${id}/landing`);
+      if (!resp.ok) {
+        return {
+          content: [{ type: "text", text: `Failed to fetch player landing for ${id}: ${resp.status}` }],
+          isError: true,
+        };
+      }
+      const data = await resp.json();
+      const sub = data?.featuredStats?.regularSeason?.subSeason;
+      const stats = sub
+        ? {
+            id,
+            season: sub.season ?? data?.featuredStats?.season,
+            gamesPlayed: sub.gamesPlayed,
+            goals: sub.goals,
+            assists: sub.assists,
+            points: sub.points,
+          }
+        : { id };
+
+      return {
+        _meta: {},
+        structuredContent: stats,
+        content: [
+          {
+            type: "text",
+            text: sub
+              ? `Stats for ${id}: GP ${sub.gamesPlayed}, G ${sub.goals}, A ${sub.assists}, P ${sub.points}`
+              : `No current season stats for ${id}`,
+          },
+        ],
         isError: false,
       };
     } catch (error) {
