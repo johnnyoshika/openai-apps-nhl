@@ -1,5 +1,6 @@
 import { type CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { getTeamScoreboard } from "./nhl-scoreboard.js";
+import { getTeamRoster } from "./nhl-roster.js";
 import { z } from "zod";
 import { McpServer } from "skybridge/server";
 
@@ -9,6 +10,38 @@ const server = new McpServer(
     version: "0.0.1",
   },
   { capabilities: {} },
+);
+
+server.widget(
+  "nhl-roster",
+  {
+    description: "NHL team current roster",
+  },
+  {
+    description: "Show the current roster for an NHL team (3-letter code).",
+    inputSchema: { team: z.string().describe("NHL team 3-letter code, e.g., VAN") },
+    outputSchema: { team: z.string() },
+  },
+  async ({ team }): Promise<CallToolResult> => {
+    try {
+      const code = (team || "VAN").toUpperCase();
+      const roster = await getTeamRoster(code);
+
+      return {
+        _meta: {},
+        structuredContent: roster,
+        content: [
+          { type: "text", text: `${code} roster: ${roster.players.length} players` },
+        ],
+        isError: false,
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${error}` }],
+        isError: true,
+      };
+    }
+  },
 );
 
 server.widget(
