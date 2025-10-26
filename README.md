@@ -1,5 +1,7 @@
 Created from this template: https://github.com/alpic-ai/apps-sdk-template
 
+NHL Unofficial API: https://github.com/Zmalski/NHL-API-Reference?tab=readme-ov-file#nhl-web-api-documentation
+
 # ChatGPT Apps SDK Alpic Starter
 
 This repository is a minimal Typescript application demonstrating how to build an OpenAI Apps SDK compatible MCP server with widget rendering in ChatGPT.
